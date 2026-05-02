@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Marketpalace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="js/marketpalace.js"></script>
+    <script>
+        if (!MarketpalaceApp.isLoggedIn()) {
+            window.location.replace("login.html?next=" + encodeURIComponent("dashboard.html"));
+        }
+    </script>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Marketpalace home">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <span class="logo-text">Marketpalace</span>
+            </a>
+            <nav class="header-nav-main" aria-label="Marketplace">
+                <a href="shop.html">Shop</a>
+                <a href="checkout.html" class="header-cart-link">Cart <span class="badge" data-mp-cart-count>0</span></a>
+            </nav>
+            <div class="header-actions">
+                <span id="auth-links" class="header-auth-slot"></span>
+                <a class="btn btn-ghost header-contact-email" href="mailto:hello@marketpalace.com">hello@marketpalace.com</a>
+                <a class="btn btn-primary" href="tel:+18005551234">+1 (800) 555-1234</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <div class="page-hero-mini">
+            <div class="container">
+                <h1 class="page-title" id="dash-welcome-title">Dashboard</h1>
+                <p class="page-lead" id="dash-welcome-lead">Manage your orders and listings.</p>
+            </div>
+        </div>
+        <div class="container dashboard-grid">
+            <div class="stack-gap">
+                <div class="panel-card">
+                    <h2 class="panel-title">Your orders</h2>
+                    <p class="panel-intro">Purchases made from this browser are listed here (demo only).</p>
+                    <div id="orders-list" class="order-list"></div>
+                </div>
+
+                <div class="panel-card" id="creator-upload" hidden>
+                    <h2 class="panel-title">Upload a product</h2>
+                    <p class="panel-intro">File names are stored with the listing. No server upload—this is a front-end prototype.</p>
+                    <form id="upload-form" class="form-stack" novalidate>
+                        <div id="upload-message" class="form-message" data-variant="error" hidden role="alert"></div>
+                        <div>
+                            <label class="field-label" for="product-title">Title</label>
+                            <input id="product-title" name="title" type="text" class="input-field" required>
+                        </div>
+                        <div>
+                            <label class="field-label" for="product-desc">Description</label>
+                            <textarea id="product-desc" name="description" class="textarea-field" rows="4" required></textarea>
+                        </div>
+                        <div>
+                            <label class="field-label" for="product-price">Price (USD)</label>
+                            <input id="product-price" name="price" type="number" class="input-field" min="0" step="0.01" required placeholder="29.00">
+                        </div>
+                        <div>
+                            <label class="field-label" for="product-file">Digital file</label>
+                            <input id="product-file" name="file" type="file" class="input-field" style="padding: 0.55rem">
+                            <p class="file-input-note">For this demo, only the file name and size are saved in your browser.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Publish product</button>
+                    </form>
+                </div>
+
+                <div class="panel-card" id="creator-listings" hidden>
+                    <h2 class="panel-title">Your listings</h2>
+                    <p class="panel-intro">Products shoppers see on the marketplace.</p>
+                    <div class="cart-table-wrap">
+                        <table class="cart-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>File</th>
+                                </tr>
+                            </thead>
+                            <tbody id="creator-products-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="no-listings-note" class="empty-state form-footer-note" hidden style="margin-top: 1rem; border:none; background:none; padding-left: 0;">
+                        You have not listed any products yet.
+                    </div>
+                </div>
+            </div>
+
+            <aside class="stack-gap">
+                <div class="panel-card">
+                    <h2 class="panel-title">Account</h2>
+                    <div class="summary-rows">
+                        <div class="summary-split">
+                            <span class="summary-muted">Role</span>
+                            <span id="account-role"></span>
+                        </div>
+                        <div class="summary-split">
+                            <span class="summary-muted">Email</span>
+                            <span id="account-email"></span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem" class="stack-gap">
+                        <a class="btn btn-outline full-width-btn" href="shop.html">Go to marketplace</a>
+                        <a class="btn btn-primary full-width-btn" href="checkout.html">View cart checkout</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p class="footer-brand">© <span id="year"></span> Marketpalace. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:hello@marketpalace.com">Email</a>
+                <a href="tel:+18005551234">Phone</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        function formatDate(ts) {
+            if (!ts) return "—";
+            var d = new Date(ts);
+            return d.toLocaleString();
+        }
+
+        function renderDashboard() {
+            var profile = MarketpalaceApp.getCurrentProfile();
+            if (!profile) return;
+
+            document.getElementById("dash-welcome-title").textContent = "Hey, " + profile.user.displayName;
+            document.getElementById("dash-welcome-lead").textContent =
+                profile.user.role === "creator"
+                    ? "Review orders below and publish digital products straight to your shop."
+                    : "Your purchase history stays on this device for demo purposes.";
+            document.getElementById("account-role").textContent = profile.user.role === "creator" ? "Creator" : "Buyer";
+            document.getElementById("account-email").textContent = profile.user.email;
+
+            var orders = MarketpalaceApp.getOrders().filter(function (o) {
+                return (o.buyerEmail || "").toLowerCase() === profile.user.emailLower;
+            });
+
+            var list = document.getElementById("orders-list");
+
+            if (orders.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="text-align:left">No orders yet.</div>';
+            } else {
+                list.innerHTML = orders
+                    .map(function (o) {
+                        var lines = (o.items || [])
+                            .map(function (item) {
+                                return (
+                                    "<li>" +
+                                    MarketpalaceApp.escapeHtml(item.title) +
+                                    " · " +
+                                    MarketpalaceApp.formatMoney(item.price) +
+                                    " × " +
+                                    item.qty +
+                                    "</li>"
+                                );
+                            })
+                            .join("");
+                        return (
+                            '<article class="order-card-mini">' +
+                            '<div class="order-card-mini-head">' +
+                            "<span>" +
+                            formatDate(o.placedAt) +
+                            '</span><span class="tag-pill">' +
+                            MarketpalaceApp.escapeHtml(o.status || "paid") +
+                            "</span></div>" +
+                            '<ul class="order-lines">' +
+                            lines +
+                            "</ul>" +
+                            '<p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-muted);">Total: ' +
+                            MarketpalaceApp.formatMoney(o.total) +
+                            "</p>" +
+                            '<p style="margin:0.35rem 0 0;font-size:0.8rem;color:var(--text-faint);">' +
+                            MarketpalaceApp.escapeHtml(o.note || "") +
+                            "</p>" +
+                            "</article>"
+                        );
+                    })
+                    .join("");
+            }
+
+            var creator = profile.user.role === "creator";
+            document.getElementById("creator-upload").hidden = !creator;
+            document.getElementById("creator-listings").hidden = !creator;
+
+            if (!creator) return;
+
+            var products = MarketpalaceApp.getProducts().filter(function (p) {
+                return (p.creatorEmail || "").toLowerCase() === profile.user.emailLower;
+            });
+
+            var body = document.getElementById("creator-products-body");
+            var emptyNote = document.getElementById("no-listings-note");
+
+            if (products.length === 0) {
+                body.innerHTML = "";
+                emptyNote.hidden = false;
+            } else {
+                emptyNote.hidden = true;
+                body.innerHTML = products
+                    .map(function (p) {
+                        return (
+                            "<tr><td>" +
+                            MarketpalaceApp.escapeHtml(p.title) +
+                            "</td><td>" +
+                            MarketpalaceApp.formatMoney(p.price) +
+                            "</td><td>" +
+                            MarketpalaceApp.escapeHtml(p.fileName || "—") +
+                            "</td></tr>"
+                        );
+                    })
+                    .join("");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            renderDashboard();
+
+            var form = document.getElementById("upload-form");
+            var um = document.getElementById("upload-message");
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                um.hidden = true;
+
+                var res = MarketpalaceApp.addProductFromForm({
+                    title: document.getElementById("product-title").value,
+                    description: document.getElementById("product-desc").value,
+                    price: document.getElementById("product-price").value,
+                    fileInput: document.getElementById("product-file"),
+                });
+
+                if (!res.ok) {
+                    um.textContent = res.error;
+                    um.setAttribute("data-variant", "error");
+                    um.hidden = false;
+                    return;
+                }
+
+                um.textContent = "Product saved to marketplace.";
+                um.setAttribute("data-variant", "success");
+                um.hidden = false;
+                form.reset();
+                renderDashboard();
+            });
+        });
+
+        window.addEventListener("focus", renderDashboard);
+    </script>
+</body>
+</html>

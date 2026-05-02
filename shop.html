@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop — Marketpalace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Marketpalace home">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <span class="logo-text">Marketpalace</span>
+            </a>
+            <nav class="header-nav-main" aria-label="Marketplace">
+                <a href="shop.html" aria-current="page">Shop</a>
+                <a href="checkout.html" class="header-cart-link">Cart <span class="badge" data-mp-cart-count>0</span></a>
+            </nav>
+            <div class="header-actions">
+                <span id="auth-links" class="header-auth-slot"></span>
+                <a class="btn btn-ghost header-contact-email" href="mailto:hello@marketpalace.com">hello@marketpalace.com</a>
+                <a class="btn btn-primary" href="tel:+18005551234">+1 (800) 555-1234</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <div class="page-hero-mini">
+            <div class="container">
+                <h1 class="page-title">Marketplace</h1>
+                <p class="page-lead">Browse digital products from independent creators. Add to cart and check out in seconds.</p>
+            </div>
+        </div>
+        <div class="container">
+            <div class="products-toolbar">
+                <div>
+                    <span class="section-label">Catalog</span>
+                    <p class="product-count" id="product-count" aria-live="polite"></p>
+                </div>
+                <a class="btn btn-outline" href="dashboard.html">Sell on Marketpalace</a>
+            </div>
+            <div id="product-grid" class="product-grid" role="list"></div>
+            <div id="products-empty" class="empty-state" hidden>
+                <p>No products yet. Register as a creator and upload from your dashboard—or check back soon.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p class="footer-brand">© <span id="year"></span> Marketpalace. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:hello@marketpalace.com">Email</a>
+                <a href="tel:+18005551234">Phone</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/marketpalace.js"></script>
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        function renderProducts() {
+            var products = MarketpalaceApp.getProducts().slice().sort(function (a, b) {
+                return (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            var grid = document.getElementById("product-grid");
+            var empty = document.getElementById("products-empty");
+            var count = document.getElementById("product-count");
+
+            count.textContent = products.length + " product" + (products.length === 1 ? "" : "s");
+
+            if (products.length === 0) {
+                grid.innerHTML = "";
+                empty.hidden = false;
+                return;
+            }
+
+            empty.hidden = true;
+
+            grid.innerHTML = products
+                .map(function (p) {
+                    var desc = MarketpalaceApp.escapeHtml(p.description);
+                    var title = MarketpalaceApp.escapeHtml(p.title);
+                    var fileLabel = MarketpalaceApp.escapeHtml(p.fileName || "Digital file");
+                    return (
+                        '<article class="product-card" role="listitem">' +
+                        '<h2 class="product-card-title">' + title + '</h2>' +
+                        '<p class="product-meta">' + fileLabel + "</p>" +
+                        '<p class="product-desc">' + desc + "</p>" +
+                        '<div class="product-foot">' +
+                        '<span class="product-price">' + MarketpalaceApp.formatMoney(p.price) + "</span>" +
+                        '<div class="product-actions">' +
+                        '<button type="button" class="btn btn-primary btn-nav" data-add-cart="' +
+                        String(p.id).replace(/&/g, "&amp;").replace(/"/g, "&quot;") +
+                        '">Add to cart</button>' +
+                        "</div></div></article>"
+                    );
+                })
+                .join("");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            renderProducts();
+            document.getElementById("product-grid").addEventListener("click", function (e) {
+                var btn = e.target.closest("[data-add-cart]");
+                if (!btn) return;
+                var id = btn.getAttribute("data-add-cart");
+                if (!id) return;
+                MarketpalaceApp.addToCart(id);
+            });
+        });
+
+        window.addEventListener("storage", function (e) {
+            if (!e.key || e.key.indexOf("mp_") !== 0) return;
+            renderProducts();
+        });
+
+        window.addEventListener("focus", renderProducts);
+    </script>
+</body>
+</html>

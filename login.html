@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in — Marketpalace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Marketpalace home">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <span class="logo-text">Marketpalace</span>
+            </a>
+            <nav class="header-nav-main" aria-label="Marketplace">
+                <a href="shop.html">Shop</a>
+                <a href="checkout.html" class="header-cart-link">Cart <span class="badge" data-mp-cart-count>0</span></a>
+            </nav>
+            <div class="header-actions">
+                <span id="auth-links" class="header-auth-slot"></span>
+                <a class="btn btn-ghost header-contact-email" href="mailto:hello@marketpalace.com">hello@marketpalace.com</a>
+                <a class="btn btn-primary" href="tel:+18005551234">+1 (800) 555-1234</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <div class="page-hero-mini">
+            <div class="container">
+                <h1 class="page-title">Welcome back</h1>
+                <p class="page-lead">Sign in to access your dashboard, orders, and saved cart.</p>
+            </div>
+        </div>
+        <div class="container stack-gap">
+            <div class="auth-card">
+                <form id="login-form" class="form-stack" novalidate>
+                    <div id="login-message" class="form-message" data-variant="error" hidden role="alert"></div>
+                    <div>
+                        <label class="field-label" for="login-email">Email</label>
+                        <input id="login-email" name="email" type="email" class="input-field" autocomplete="username" required>
+                    </div>
+                    <div>
+                        <label class="field-label" for="login-password">Password</label>
+                        <input id="login-password" name="password" type="password" class="input-field" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary full-width-btn">Log in</button>
+                </form>
+                <p class="form-footer-note">New here? <a href="register.html">Create an account</a></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p class="footer-brand">© <span id="year"></span> Marketpalace. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:hello@marketpalace.com">Email</a>
+                <a href="tel:+18005551234">Phone</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/marketpalace.js"></script>
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        function getNextTarget() {
+            var params = new URLSearchParams(window.location.search);
+            var next = params.get("next");
+            if (!next || !/^[a-z0-9._-]+\.html$/i.test(next)) return "dashboard.html";
+            return next;
+        }
+
+        var form = document.getElementById("login-form");
+        var msg = document.getElementById("login-message");
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            msg.hidden = true;
+            var email = document.getElementById("login-email").value.trim();
+            var password = document.getElementById("login-password").value;
+
+            var res = MarketpalaceApp.loginUser(email, password);
+            if (!res.ok) {
+                msg.textContent = res.error;
+                msg.setAttribute("data-variant", "error");
+                msg.hidden = false;
+                return;
+            }
+            MarketpalaceApp.refreshHeaderChrome();
+            window.location.href = getNextTarget();
+        });
+    </script>
+</body>
+</html>

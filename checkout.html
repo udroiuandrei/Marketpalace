@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — Marketpalace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="js/marketpalace.js"></script>
+    <script>
+        if (!MarketpalaceApp.isLoggedIn()) {
+            window.location.replace("login.html?next=" + encodeURIComponent("checkout.html"));
+        }
+    </script>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Marketpalace home">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <span class="logo-text">Marketpalace</span>
+            </a>
+            <nav class="header-nav-main" aria-label="Marketplace">
+                <a href="shop.html">Shop</a>
+                <a href="checkout.html" class="header-cart-link" aria-current="page">Cart <span class="badge" data-mp-cart-count>0</span></a>
+            </nav>
+            <div class="header-actions">
+                <span id="auth-links" class="header-auth-slot"></span>
+                <a class="btn btn-ghost header-contact-email" href="mailto:hello@marketpalace.com">hello@marketpalace.com</a>
+                <a class="btn btn-primary" href="tel:+18005551234">+1 (800) 555-1234</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <div class="page-hero-mini">
+            <div class="container">
+                <h1 class="page-title">Checkout</h1>
+                <p class="page-lead">Review your cart. This demo records the order locally—no real charges are processed.</p>
+                <p class="danger-muted" role="note">Reminder: passwords and carts are stored in your browser only, not on a secure server.</p>
+            </div>
+        </div>
+        <div class="container checkout-split stack-gap">
+            <div class="cart-table-wrap" id="cart-section">
+                <table class="cart-table" aria-label="Shopping cart">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Line</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-rows"></tbody>
+                </table>
+                <div id="cart-empty" class="empty-state" hidden aria-live="polite">
+                    <p>Your cart is empty. <a href="shop.html">Browse the marketplace</a>.</p>
+                </div>
+            </div>
+            <div class="stack-gap">
+                <div class="panel-card">
+                    <h2 class="panel-title">Order summary</h2>
+                    <div class="summary-rows">
+                        <div class="summary-split">
+                            <span class="summary-muted">Subtotal</span>
+                            <span id="summary-subtotal"></span>
+                        </div>
+                        <div class="summary-split">
+                            <span class="summary-muted">Tax &amp; fees</span>
+                            <span>Included — demo only</span>
+                        </div>
+                        <div class="summary-split summary-total">
+                            <span class="summary-muted">Due today</span>
+                            <span id="summary-total"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary full-width-btn" style="margin-top:1.25rem" id="checkout-btn">Complete purchase</button>
+                    <div id="checkout-message" class="form-message form-footer-note" data-variant="error" hidden role="alert" style="margin-top: 0.75rem;"></div>
+                </div>
+                <div class="panel-card">
+                    <h2 class="panel-title">Payment (placeholder)</h2>
+                    <p class="panel-intro">Card fields are omitted in this starter build. Completing checkout stores the order locally for your dashboard.</p>
+                    <label class="field-label" for="pay-notes">Buyer note (optional)</label>
+                    <textarea id="pay-notes" name="notes" class="textarea-field" rows="3" placeholder="Instructions for delivery, PO number…"></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p class="footer-brand">© <span id="year"></span> Marketpalace. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:hello@marketpalace.com">Email</a>
+                <a href="tel:+18005551234">Phone</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        function renderCheckout() {
+            var pack = MarketpalaceApp.getCartWithProducts();
+            var tbody = document.getElementById("cart-rows");
+            var empty = document.getElementById("cart-empty");
+            var table = tbody.closest(".cart-table-wrap").querySelector(".cart-table");
+
+            if (pack.rows.length === 0) {
+                table.hidden = true;
+                empty.hidden = false;
+                document.getElementById("checkout-btn").disabled = true;
+                document.getElementById("summary-subtotal").textContent = MarketpalaceApp.formatMoney(0);
+                document.getElementById("summary-total").textContent = MarketpalaceApp.formatMoney(0);
+                return;
+            }
+
+            table.hidden = false;
+            empty.hidden = true;
+            document.getElementById("checkout-btn").disabled = false;
+
+            tbody.innerHTML = pack.rows
+                .map(function (row) {
+                    var p = row.product;
+                    var id = MarketpalaceApp.escapeHtml(p.id);
+                    var title = MarketpalaceApp.escapeHtml(p.title);
+                    return (
+                        "<tr>" +
+                        "<td>" + title + "</td>" +
+                        "<td>" + MarketpalaceApp.formatMoney(p.price) + "</td>" +
+                        '<td><span class="qty-controls">' +
+                        '<button type="button" class="qty-btn" data-qty-change="' +
+                        id +
+                        '" data-delta="-1" aria-label="Decrease quantity">−</button>' +
+                        '<span>' +
+                        row.qty +
+                        "</span>" +
+                        '<button type="button" class="qty-btn" data-qty-change="' +
+                        id +
+                        '" data-delta="1" aria-label="Increase quantity">+</button>' +
+                        "</span></td>" +
+                        "<td>" + MarketpalaceApp.formatMoney(row.lineTotal) + "</td>" +
+                        "</tr>"
+                    );
+                })
+                .join("");
+
+            document.getElementById("summary-subtotal").textContent = MarketpalaceApp.formatMoney(pack.subtotal);
+            document.getElementById("summary-total").textContent = MarketpalaceApp.formatMoney(pack.subtotal);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            renderCheckout();
+
+            document.getElementById("cart-rows").addEventListener("click", function (e) {
+                var btn = e.target.closest("[data-qty-change]");
+                if (!btn) return;
+                var pid = btn.getAttribute("data-qty-change");
+                var delta = parseInt(btn.getAttribute("data-delta"), 10);
+                if (!pid || isNaN(delta)) return;
+
+                var cart = MarketpalaceApp.getCart();
+                var qty = 0;
+                for (var i = 0; i < cart.length; i++) {
+                    if (cart[i].productId === pid) qty = cart[i].qty || 1;
+                }
+                var nextQty = qty + delta;
+                MarketpalaceApp.setLineQty(pid, nextQty);
+                renderCheckout();
+            });
+
+            document.getElementById("checkout-btn").addEventListener("click", function () {
+                var box = document.getElementById("checkout-message");
+                box.hidden = true;
+
+                var res = MarketpalaceApp.placeOrder();
+                if (!res.ok) {
+                    box.textContent = res.error || "Checkout failed.";
+                    box.setAttribute("data-variant", "error");
+                    box.hidden = false;
+                    renderCheckout();
+                    return;
+                }
+
+                MarketpalaceApp.refreshHeaderChrome();
+                window.location.href = "dashboard.html";
+            });
+
+            window.addEventListener("focus", renderCheckout);
+        });
+    </script>
+</body>
+</html>
